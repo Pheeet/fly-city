@@ -1659,14 +1659,18 @@ $('fp-close').addEventListener('click',closeFly);
 $('fp-min').addEventListener('click',()=>{const b=$('fp-body'),open=b.hidden;b.hidden=!open;
   $('fp-min').textContent=open?'−':'+';$('fp-min').setAttribute('aria-expanded',String(open));$('fp-min').setAttribute('aria-label',open?'ย่อแผง':'ขยายแผง');});
 /* live mode: only when this page is served by the Fly Floor server (same origin) */
-/* where live fly data comes from: Fly Floor itself (/city), or its public Tailscale Funnel when hosted on GitHub Pages */
-const FLY_API=location.pathname.startsWith('/city')&&/^https?:$/.test(location.protocol)?'/api/state'
-  :/\.github\.io$/.test(location.hostname)?'https://diamondserver.tail23260b.ts.net/api/state':null;
-const FLY_LIVE=!!FLY_API;
+/* where live fly data comes from: Fly Floor itself (/city), or, on GitHub Pages, the public tunnel whose
+   current address is kept in a gist (the tunnel URL changes when it restarts) */
+const ON_PAGES=/\.github\.io$/.test(location.hostname);
+const FLY_GIST='https://gist.githubusercontent.com/Pheeet/7a6c8727a59f72f6a71524d200735284/raw/fly-city-api.json';
+let FLY_API=location.pathname.startsWith('/city')&&/^https?:$/.test(location.protocol)?'/api/state':null,flyFails=0;
+const FLY_LIVE=!!FLY_API||ON_PAGES;
+async function resolveFlyApi(){try{const r=await fetch(FLY_GIST+'?t='+Date.now(),{cache:'no-store'});const j=await r.json();if(j&&j.url)FLY_API=j.url+'/api/state';}catch(e){}}
 async function pollFly(){
-  try{const r=await fetch(FLY_API,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();if(!j.sources)throw 0;
-    flyData.data=j;flyData.mode='live';flyData.at=j.updated_at||Date.now()/1000;}
-  catch(e){if(flyData.data)flyData.mode='stale';}
+  if(ON_PAGES&&(!FLY_API||flyFails>=3)){await resolveFlyApi();flyFails=0;}
+  try{if(!FLY_API)throw 0;const r=await fetch(FLY_API,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();if(!j.sources)throw 0;
+    flyData.data=j;flyData.mode='live';flyData.at=j.updated_at||Date.now()/1000;flyFails=0;}
+  catch(e){flyFails++;if(flyData.data)flyData.mode='stale';}
   applyFly();setTimeout(pollFly,5000);
 }
 if(FLY_LIVE)pollFly();
