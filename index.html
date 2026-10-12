@@ -931,7 +931,7 @@ function buildCity(seed){
       if(k<21&&rng()<0.72)parked.push({x:x+1.3,y:BASE-0.1,z:rz+2.7,rot:rng()<0.5?0:Math.PI,c:pick(CAR_COLS)});}}
     begin('ป้อมลานจอดรถ',tag);mass('shop',rectP(lx+52,lz+26,lx+58,lz+30),BASE,1,col(0xffffff));end();
   }
-  /* Fly Floor HQ: lobby, six glass trading floors (5 FlyIndex seeds + FlyBTC), roof fly */
+  /* Fly Floor HQ: lobby, three glass trading floors (F2 FlyIndex 5 seeds, F3 FlyBTC, F4 FlyGold), roof fly */
   function blockFlyHQ(lx,lz,tag){
     top(G.plain,lx,BASE+0.02,lz,lx+60,lz+60,P.plaza);
     const S=32,x0=lx+14,z0=lz+14,x1=x0+S,z1=z0+S,cx=(x0+x1)/2,cz=(z0+z1)/2,RR=6,FH=6.2,OF=-4;
@@ -943,8 +943,9 @@ function buildCity(seed){
     const floors=[],slabs=[];let y=lob;
     slabs.push({y,ox:0,oz:0,th:0.6});floors.push({y0:y+0.6,y1:y+FH,ox:0,oz:0});y+=FH;
     slabs.push({y,ox:OF,oz:OF,th:0.6,under:true});floors.push({y0:y+0.6,y1:y+FH,ox:OF,oz:OF});y+=FH;
+    slabs.push({y,ox:OF,oz:OF,th:0.6});floors.push({y0:y+0.6,y1:y+FH,ox:OF,oz:OF});y+=FH;   // F4 FlyGold
     slabs.push({y,ox:OF,oz:OF,th:2.6,roof:true});y+=2.6;
-    cur.floors=4;cur.h=y-BASE;cur.tip=y+7-BASE;cur.fly=true;cur.name='Fly Floor';cur.box=[x0+OF-1,z0+OF-1,x1+1,z1+1];end();
+    cur.floors=5;cur.h=y-BASE;cur.tip=y+7-BASE;cur.fly=true;cur.name='Fly Floor';cur.box=[x0+OF-1,z0+OF-1,x1+1,z1+1];end();
     // reflecting pool along the front, trees around the plaza
     top(G.plain,cx-13,BASE+0.03,z1+4.5,cx+13,z1+10,P.path);top(G.plain,cx-12.4,BASE+0.05,z1+5.1,cx+12.4,z1+9.4,P.water);
     for(let x=lx+3;x<lx+58;x+=6)for(let z=lz+3;z<lz+58;z+=6){
@@ -1467,6 +1468,16 @@ function buildFlyHQ(hq){
       extrude(F,ngon(X+10.2,Z+5,2.2,2.2,16),Y+0.78,Y+0.92,col(0xf4f2ee),null,F,col(0xf4f2ee));B(10.05,0,4.85,10.35,0.78,5.15,0xb8b8b4);
       for(const a of [0.6,2.6,4.6]){const sx=10.2+Math.cos(a)*3.3,sz=5+Math.sin(a)*3.3;B(sx-0.45,0,sz-0.45,sx+0.45,0.5,sz+0.45,0x39414e);}
       plant(-12,11.5,1.0);plant(11.5,-11.5,1.0);plant(-6,11.5,0.9);
+    }else if(k===2){
+      // FlyGold floor: one desk, a vault with stacked gold bars, a gold-bar display table
+      const scr=screen('gold',6);desk(-2,0,7.2,2,scr,6,0.9);board.material=scr.mat;
+      B(9,0,-12.5,15.4,4.6,-6,0x6b7280);B(9.4,0.4,-6.02,15,4.2,-5.9,0x8a929c);                 // vault box and door
+      extrude(F,ngon(X+12.2,Z-5.86,1.15,1.15,18),Y+1.9,Y+2.05,col(0xc9a227),null,F,col(0xc9a227));   // wheel
+      const bar=(bx,by,bz)=>B(bx,by,bz,bx+1.1,by+0.32,bz+0.5,0xd4a72c,0xb8901f);
+      for(let r=0;r<3;r++)for(let i=0;i<4-r;i++)bar(9.6+i*1.2+r*0.6,r*0.32,-3.8);                // bar pyramid by the vault
+      B(-13.5,0,6,-6.5,0.9,9.5,0xe9e7e2);for(let r=0;r<2;r++)for(let i=0;i<4-r;i++)bar(-12.6+i*1.4+r*0.7,0.9+r*0.32,7.5);
+      B(-15.75,0,-9,-15.15,3.2,-1,0xd9d2c4);for(const sy of [0.8,1.6,2.4])B(-15.15,sy,-8.8,-14.95,sy+0.08,-1.2,0xc4bba9);
+      plant(10.2,10.2,1.2);plant(-11.1,-11.9,1.0);plant(4,11.6,0.9);
     }else{
       // FlyBTC floor: one big desk, lounge, bookshelf, meeting table
       const scr=screen('btc',5);desk(0,0,8.4,3,scr,5,0.9);board.material=scr.mat;
@@ -1516,7 +1527,7 @@ function screenChart(g,prices,y0,h){
   g.strokeStyle='#5fd0db';g.lineWidth=3;g.stroke();g.lineTo(W-22,y0+h);g.lineTo(22,y0+h);g.closePath();g.fillStyle='rgba(95,208,219,0.14)';g.fill();
 }
 function drawScreens(hq){
-  const ss=seedStates(),{flyindex:fi,flybtc:fb}=sources();
+  const ss=seedStates(),{flyindex:fi,flybtc:fb}=sources(),fg=gold();
   hq.screens.forEach(s=>{
     const g=s.g,W=512,H=288;g.fillStyle='#0d1117';g.fillRect(0,0,W,H);g.textBaseline='top';
     const head=(title,pos)=>{g.font='600 30px system-ui,sans-serif';g.fillStyle='#f2f4f6';g.fillText(title,22,18);
@@ -1533,6 +1544,12 @@ function drawScreens(hq){
         g.fillStyle='#aab3bc';g.fillText('รอบถัดไป '+thaiTime(fi.next_decision,true)+' น.',22,128);}
       else g.fillText('รอข้อมูลจาก Fly Floor',22,70);
       screenChart(g,fi&&fi.markets&&fi.markets[0]&&fi.markets[0].prices,162,106);}
+    else if(s.kind==='gold'){const st=ss[6],b=fg&&fg.flies&&fg.flies[0],mk=fg&&(fg.markets||[])[0]||{};head('Gold 01',st.pos==='OFF'?'—':st.pos);
+      if(b){g.fillText('XAU  '+(mk.bid!=null?(+mk.bid).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''),22,62);
+        g.fillText('อยาก '+(b.wants||'?')+(b.block==='long_only'?' → ถือ FLAT':'')+'  กำไรค้าง '+money(fg.open_pnl),22,88);
+        if(Array.isArray(b.mood))g.fillText('อารมณ์  L '+(+b.mood[1]).toFixed(2)+'  S '+(+b.mood[2]).toFixed(2)+' · H4 long-only',22,114);}
+      else g.fillText('รอข้อมูลจาก Fly Floor',22,70);
+      screenChart(g,mk.prices,150,118);}
     else{const st=ss[5],b=fb&&fb.flies&&fb.flies[0],mk=fb&&(fb.markets||[])[0]||{};head('BTC 01',st.pos==='OFF'?'—':st.pos);
       if(b){g.fillText((mk.symbol||'BTC')+'  '+(mk.bid!=null?(+mk.bid).toLocaleString('en-US',{maximumFractionDigits:0}):''),22,62);
         g.fillText('อยาก '+(b.wants||'?')+'  กำไรค้าง '+money(fb.open_pnl),22,88);
@@ -1555,7 +1572,9 @@ function thaiTime(v,withDate){const ms=toMs(v);if(!ms||isNaN(ms))return '—';
 const money=v=>v==null||isNaN(v)?'—':(v<0?'−$':'+$')+Math.abs(v).toFixed(2);
 const sgnCls=v=>v<0?'neg':v>0?'posv':'';
 function sources(){const d=flyData.data;return d&&d.sources?d.sources:{};}
-/* one entry per fly: Index 01–05 (FlyIndex seeds) then BTC 01 */
+/* FlyGold rides in /api/state 'extras' so the Fly Floor page itself keeps its two sources */
+function gold(){const d=flyData.data;return d&&d.extras&&d.extras.flygold||null;}
+/* one entry per fly: Index 01–05 (FlyIndex seeds), BTC 01, Gold 01 */
 function seedStates(){
   const {flyindex:fi,flybtc:fb}=sources(),out=[];
   for(let k=0;k<5;k++){const f=fi&&fi.flies&&fi.flies[k];
@@ -1564,16 +1583,19 @@ function seedStates(){
     out.push({name:f.name||'Index 0'+(k+1),pos:longs?'LONG':'FLAT',level:longs/Math.max(1,(f.markets||[]).length),ok:fi.state==='live'&&!fi.stale});}
   const b=fb&&fb.flies&&fb.flies[0];
   out.push(b?{name:b.name||'BTC 01',pos:b.held||'FLAT',level:b.held&&b.held!=='FLAT'?1:0,wants:b.wants,block:b.block,ok:fb.state==='live'&&!fb.stale,utc:b.utc}:{name:'BTC 01',pos:'OFF',ok:false});
+  const fg=gold(),g=fg&&fg.flies&&fg.flies[0];
+  out.push(g?{name:g.name||'Gold 01',pos:g.held||'FLAT',level:g.held&&g.held!=='FLAT'?1:0,wants:g.wants,block:g.block,ok:fg.state==='live'&&!fg.stale,utc:g.bar_utc}:{name:'Gold 01',pos:'OFF',ok:false});
   return out;
 }
-/* two trading floors: F2 FlyIndex (five seeds share it), F3 FlyBTC */
+/* three trading floors: F2 FlyIndex (five seeds share it), F3 FlyBTC, F4 FlyGold */
 function floorStates(){
   const {flyindex:fi}=sources(),ss=seedStates(),idx=ss.slice(0,5),n=idx.filter(s=>s.pos==='LONG').length,have=idx.some(s=>s.pos!=='OFF');
   const last=fi&&fi.system&&fi.system.decisions&&fi.system.decisions.length?fi.system.decisions[fi.system.decisions.length-1].utc:null;
   const b=ss[5];
   return [
     {name:'FlyIndex',pos:have?(n?'LONG':'FLAT'):'OFF',level:n/5,detail:have?'LONG '+n+' จาก 5 ซีด':'ไม่มีข้อมูล',ok:idx.some(s=>s.ok),utc:last},
-    {name:'FlyBTC',pos:b.pos,level:b.level,detail:b.pos==='OFF'?'ไม่มีข้อมูล':'อยาก '+(b.wants||'?')+(b.block?' · ถูกบล็อก: '+b.block:''),ok:b.ok,utc:b.utc}];
+    {name:'FlyBTC',pos:b.pos,level:b.level,detail:b.pos==='OFF'?'ไม่มีข้อมูล':'อยาก '+(b.wants||'?')+(b.block?' · ถูกบล็อก: '+b.block:''),ok:b.ok,utc:b.utc},
+    {name:'FlyGold',pos:ss[6].pos,level:ss[6].level,detail:ss[6].pos==='OFF'?'ไม่มีข้อมูล':'อยาก '+(ss[6].wants||'?')+(ss[6].block==='long_only'?' · long-only ถือ FLAT':ss[6].block?' · ถูกบล็อก: '+ss[6].block:''),ok:ss[6].ok,utc:ss[6].utc}];
 }
 const POS_COL={LONG:0x34d399,SHORT:0xf87171};
 function applyFly(){
@@ -1612,6 +1634,7 @@ function renderFlyPanel(){
   if(!flyData.data){
     h+='<p class="empty">ยังไม่มีข้อมูลแมลงวัน เปิดเมืองนี้จากเซิร์ฟเวอร์ Fly Floor ที่ <code>http://127.0.0.1:8767/city</code> เพื่อดูแบบสด</p>';
   }
+  const goldFirst=hq&&hq.sel===2,at=h.length;   // the selected F4 shows its card first
   const b=fb&&fb.flies&&fb.flies[0];
   if(fb&&b){
     const mk=(fb.markets||[])[0]||{},sy=fb.system||{};
@@ -1627,6 +1650,23 @@ function renderFlyPanel(){
     if(lg.length){h+='<div class="log">';lg.forEach(e=>{const d=e.dopamine&&e.dopamine.delta;h+='<div><span>'+esc(thaiTime(e.utc))+'</span><span class="pos '+esc(e.held)+'">'+esc(e.held)+'</span><span>'+(d==null?'':'δ '+(+d).toFixed(2))+'</span></div>';});h+='</div>';}
     h+='</div>';
   }
+  const fg=gold(),gf=fg&&fg.flies&&fg.flies[0],before=h;
+  if(fg&&gf){
+    const mk=(fg.markets||[])[0]||{},sy=fg.system||{},lf=(sy.fills||[]).filter(f=>/^(BUY_FILLED|CLOSE_FILLED)$/.test(f.status))[0];
+    h+='<div class="card"><h3>FlyGold · XAUUSD<span class="meta">'+esc(fg.state||'')+(fg.stale?' · ข้อมูลเก่า':'')+' · H4 long-only</span></h3>';
+    h+='<dl class="kv"><div><dt>ถืออยู่</dt><dd class="pos '+esc(gf.held)+'">'+esc(gf.held||'—')+'</dd></div><div><dt>สมองอยาก</dt><dd class="pos '+esc(gf.wants)+'">'+esc(gf.wants||'—')+'</dd></div><div><dt>กำไรค้าง</dt><dd class="'+sgnCls(fg.open_pnl)+'">'+money(fg.open_pnl)+'</dd></div>'+
+      '<div><dt>กำไรรอบนี้</dt><dd class="'+sgnCls(fg.realized)+'">'+money(fg.realized)+'</dd></div><div><dt>แท่ง H4</dt><dd>'+esc(sy.decision_count??'—')+'</dd></div><div><dt>แท่งถัดไป</dt><dd>'+esc(thaiTime(sy.next_bar))+'</dd></div></dl>';
+    if(gf.wants==='SHORT')h+='<p class="sub" style="margin:0">สมองอยาก SHORT แต่บอทนี้เทรดแค่ฝั่ง long จึงถือ FLAT รอ</p>';
+    if(lf)h+='<p class="sub" style="margin:0">ไม้ล่าสุด: '+esc(lf.status==='BUY_FILLED'?'BUY':'ปิด')+' '+esc(lf.volume)+' lot @ '+esc((+lf.price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}))+' · '+esc(thaiTime(lf.utc,true))+' น.</p>';
+    if(Array.isArray(gf.mood)){const mx=Math.max(1e-6,...gf.mood.map(Math.abs));h+='<div class="qbars">';
+      ['FLAT','LONG','SHORT'].forEach((n,i)=>{const v=gf.mood[i]||0,w=Math.abs(v)/mx*50;h+='<span>'+n+'</span><span class="bar"><i style="left:'+(v<0?50-w:50)+'%;width:'+w+'%;background:'+(v<0?'var(--short)':'var(--long)')+'"></i></span><span>'+v.toFixed(3)+'</span>';});h+='</div>';
+      h+='<p class="sub" style="margin:0">อารมณ์ (mood) ของแมลงวัน · แท่งล่าสุด '+esc(thaiTime(gf.bar_utc,true))+' น.</p>';}
+    h+=spark(mk.prices);
+    const lg=(gf.history||[]).slice(-6).reverse();
+    if(lg.length){h+='<div class="log">';lg.forEach(e=>{h+='<div><span>'+esc(thaiTime(e.bar,true))+'</span><span class="pos '+esc(e.held)+'">'+esc(e.held)+'</span><span>อยาก '+esc(e.wants)+'</span></div>';});h+='</div>';}
+    h+='</div>';
+  }
+  if(goldFirst&&h.length>before.length)h=h.slice(0,at)+h.slice(before.length)+h.slice(at,before.length);
   if(fi&&fi.flies){
     h+='<div class="card"><h3>FlyIndex<span class="meta">รอบถัดไป '+esc(thaiTime(fi.next_decision,true))+'</span></h3>';
     h+='<dl class="kv">'+(fi.markets||[]).map(mk=>'<div><dt>'+esc(mk.symbol)+'</dt><dd>โหวต '+esc((+mk.vote||0).toFixed(1))+' · '+esc(mk.volume?mk.volume+' lot':'ว่าง')+'</dd></div>').join('')+'</dl>';
@@ -1687,7 +1727,7 @@ function renderBuildingList(){
     b.innerHTML='<span class="ic">'+ic+'</span><span class="nm"><b>'+esc(name)+'</b><span>'+esc(sub)+'</span></span><span class="h">'+right+'</span>';
     b.addEventListener('click',fn);li.appendChild(b);ul.appendChild(li);};
   if(city.hq){const m=flyData.mode,st=seedStates(),inMkt=st.filter(s=>s.pos==='LONG'||s.pos==='SHORT').length;
-    add('fly','F','Fly Floor',m==='none'?'ห้องเทรด 2 ชั้น · ยังไม่เชื่อมต่อ':btcLine(),'<span class="dot '+(m==='live'?'live':m==='snapshot'?'snap':'')+'"></span>',()=>openFly());}
+    add('fly','F','Fly Floor',m==='none'?'ห้องเทรด 3 ชั้น · ยังไม่เชื่อมต่อ':btcLine(),'<span class="dot '+(m==='live'?'live':m==='snapshot'?'snap':'')+'"></span>',()=>openFly());}
   if(city.casino)add('casino','C','Fly Casino',casActive()?'คุณกำลังเล่นแบล็กแจ็ก':'แมลงวัน 2 ตัวฝึกเล่นแบล็กแจ็ก','',()=>openCasino());
   city.notable.forEach((r,i)=>add('',String(i+1),r.name,r.label+' · บล็อก '+r.block,Math.round(r.tip)+' ม.',()=>focusRecord(r)));
 }
@@ -2271,6 +2311,7 @@ buildCity(48213);
 if(location.hash==='#dusk'||location.hash==='#night')applyTime(location.hash.slice(1));
 if(location.hash==='#fly')setTimeout(()=>openFly(),400);
 if(location.hash==='#inside')setTimeout(()=>openFly(0),400);
+const hf=location.hash.match(/^#f([2-4])$/);if(hf)setTimeout(()=>openFly(+hf[1]-2),400);   // #f2 FlyIndex, #f3 FlyBTC, #f4 FlyGold
 if(location.hash==='#casino')setTimeout(()=>openCasino(),400);
 if(location.hash==='#kick')setTimeout(()=>{openCasino();startKick();},400);
 frame();
